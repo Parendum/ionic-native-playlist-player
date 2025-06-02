@@ -106,6 +106,7 @@ class NativePlaylistPlayerPlugin : Plugin() {
         Log.i(TAG, "setPlaylist()")
         val filesArray = call.getArray("playlist")
         val durationSeconds = call.getInt("duration_seconds")
+        val languageCode = call.getString("language_code", "en")
         val filesList = mutableListOf<String>()
 
         filesArray?.let {
@@ -118,7 +119,7 @@ class NativePlaylistPlayerPlugin : Plugin() {
             }
         }
 
-        implementation.setPlaylist(filesList, durationSeconds!!)
+        implementation.setPlaylist(filesList, durationSeconds!!, languageCode!!)
         call.resolve()
     }
 

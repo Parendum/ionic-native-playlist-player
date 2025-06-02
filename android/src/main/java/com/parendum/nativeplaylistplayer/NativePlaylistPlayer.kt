@@ -12,16 +12,18 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
 
     private var playlist = mutableListOf<String>()
     private var durationSeconds: Int = 0
+    private var languageCode: String = "en"
 
     fun echo(value: String): String {
         Log.i(TAG, "echo() called with value: $value")
         return value
     }
 
-    fun setPlaylist(list: List<String>, durationSeconds: Int) {
+    fun setPlaylist(list: List<String>, durationSeconds: Int, languageCode: String) {
         Log.i(TAG, "setPlaylist() called with ${list.size} items and durationSeconds = $durationSeconds")
         this.playlist = list.toMutableList()
         this.durationSeconds = durationSeconds
+        this.languageCode = languageCode
 
         for ((index, file) in playlist.withIndex()) {
             Log.i(TAG, "  [$index] $file")
@@ -46,6 +48,7 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
 
         intent.putStringArrayListExtra("playlist", ArrayList(playList))
         intent.putExtra("duration_seconds", durationSeconds)
+        intent.putExtra("language_code", languageCode)
         Log.i(TAG, "Starting NativeAudioService with ${playList.size} items for $durationSeconds seconds")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

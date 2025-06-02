@@ -13,8 +13,10 @@ import androidx.core.app.NotificationCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import android.app.PendingIntent
 
 class NativeAudioService : Service() {
+    private var currentLanguage: String = "en" // Default to English
     private var elapsedSeconds: Int = 0
     private var durationSeconds: Int = 0
 
@@ -28,7 +30,31 @@ class NativeAudioService : Service() {
         private const val TAG = "NativePlaylistPService"
         private const val CHANNEL_ID = "native_audio_notification_channel"
         private const val NOTIFICATION_ID = 1
+
+        private val notifications = mapOf(
+            "ca" to NotificationStrings(
+                title = "Incubeats està reproduint",
+                message = "Feu clic en aquesta notificació per obrir l'aplicació",
+            ),
+            "es" to NotificationStrings(
+                title = "Incubeats está reproduciendo",
+                message = "Haz clic en esta notificación para abrir la aplicación",
+            ),
+            "en" to NotificationStrings(
+                title = "Incubeats is playing",
+                message = "Click this notification to open the app",
+            ),
+            "fr" to NotificationStrings(
+                title = "Incubeats est en lecture",
+                message = "Cliquez sur cette notification pour ouvrir l'application",
+            )
+        )
     }
+
+    private data class NotificationStrings(
+        val title: String,
+        val message: String,
+    )
 
     private lateinit var player: ExoPlayer
     private var playlist: List<String> = listOf()
@@ -66,18 +92,20 @@ class NativeAudioService : Service() {
                 stopPlayback()
                 return START_NOT_STICKY
             }
-
             "ACTION_PAUSE" -> {
                 pausePlayback()
                 return START_STICKY
             }
-
             else -> {
                 // Normal playback start
                 val files = intent?.getStringArrayListExtra("playlist") ?: arrayListOf()
                 durationSeconds = intent?.getIntExtra("duration_seconds", 0) ?: 0
+                currentLanguage = intent?.getStringExtra("language_code") ?: "en"
+                if (!notifications.containsKey(currentLanguage)) {
+                    currentLanguage = "en" // Fallback to English if invalid language code
+                }
                 playlist = files.toList()
-                Log.i(TAG, "Playlist received: ${playlist.size} files")
+                Log.i(TAG, "Playlist received: ${playlist.size} files, language: $currentLanguage")
                 startPlayback()
 
                 // Promote to foreground
@@ -86,7 +114,7 @@ class NativeAudioService : Service() {
             }
         }
 
-        return START_STICKY // Tell system to restart if needed
+        return START_STICKY
     }
 
     private fun startTimer() {
@@ -164,12 +192,27 @@ class NativeAudioService : Service() {
     }
 
     private fun buildNotification(): Notification {
+        val packageManager = applicationContext.packageManager
+        val launchIntent = packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+        launchIntent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            launchIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val strings = notifications[currentLanguage] ?: notifications["en"]!!
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Playing Audio")
-            .setContentText("Your playlist is playing...")
+            .setContentTitle(strings.title)
+            .setContentText(strings.message)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(false)
 
         return builder.build()
     }

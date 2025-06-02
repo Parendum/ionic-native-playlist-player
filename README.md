@@ -48,12 +48,12 @@ echo(options: { value: string; }) => Promise<{ value: string; }>
 ### setPlaylist(...)
 
 ```typescript
-setPlaylist(options: { playlist: string[]; duration_seconds: number; }) => Promise<void>
+setPlaylist(options: { playlist: string[]; duration_seconds: number; language_code: string; }) => Promise<void>
 ```
 
-| Param         | Type                                                           |
-| ------------- | -------------------------------------------------------------- |
-| **`options`** | <code>{ playlist: string[]; duration_seconds: number; }</code> |
+| Param         | Type                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ playlist: string[]; duration_seconds: number; language_code: string; }</code> |
 
 --------------------
 

@@ -3,7 +3,7 @@ import {PluginListenerHandle} from "@capacitor/core";
 export interface NativePlaylistPlayerPlugin {
     echo(options: { value: string }): Promise<{ value: string }>;
 
-    setPlaylist(options: { playlist: string[], duration_seconds: number }): Promise<void>;
+    setPlaylist(options: { playlist: string[], duration_seconds: number, language_code: string}): Promise<void>;
 
     getPlaylist(): Promise<{ playlist: string[], duration_seconds: number }>;
 
