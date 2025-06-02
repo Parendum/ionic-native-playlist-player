@@ -55,18 +55,18 @@ class NativePlaylistPlayerPlugin : Plugin() {
                 if (intent?.action == "PLAYER_STATE_UPDATE") {
                     val isPlaying = intent.getBooleanExtra("isPlaying", false)
                     val currentTrackIndex = intent.getIntExtra("currentTrackIndex", 0)
-                    val currentPosition = intent.getLongExtra("currentPosition", 0L)
-                    val duration = intent.getLongExtra("duration", 0L)
+                    val durationSeconds = intent.getIntExtra("durationSeconds", 0)
+                    val elapsedSeconds = intent.getIntExtra("elapsedSeconds", 0)
 
                     Log.i(TAG,
-                        "Received player state: isPlaying=$isPlaying, currentTrackIndex=$currentTrackIndex, position=$currentPosition, duration=$duration")
+                        "Received player state: isPlaying=$isPlaying, currentTrackIndex=$currentTrackIndex, durationSeconds=$durationSeconds, elapsedSeconds=$elapsedSeconds")
 
                     // Fire JS event:
                     val ret = JSObject()
                     ret.put("isPlaying", isPlaying)
                     ret.put("currentTrackIndex", currentTrackIndex)
-                    ret.put("elapsedSeconds", currentPosition)
-                    ret.put("durationSeconds", duration)
+                    ret.put("durationSeconds", durationSeconds)
+                    ret.put("elapsedSeconds", elapsedSeconds)
 
                     notifyListeners("playerStateUpdate", ret)
                 }
