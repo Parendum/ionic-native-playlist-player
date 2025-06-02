@@ -123,6 +123,10 @@ class NativeAudioService : Service() {
                 if (player.isPlaying) {
                     elapsedSeconds++
                 }
+
+                if (elapsedSeconds >= durationSeconds) {
+                    stopPlayback()
+                }
                 handler.postDelayed(this, 1000) // Run every second
             }
         }
