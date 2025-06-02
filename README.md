@@ -14,6 +14,16 @@ npx cap sync
 <docgen-index>
 
 * [`echo(...)`](#echo)
+* [`setPlaylist(...)`](#setplaylist)
+* [`getPlaylist()`](#getplaylist)
+* [`play()`](#play)
+* [`pause()`](#pause)
+* [`stop()`](#stop)
+* [`addListener('playerStateUpdate', ...)`](#addlistenerplayerstateupdate-)
+* [`removeAllListeners()`](#removealllisteners)
+* [`checkPermissions()`](#checkpermissions)
+* [`requestPermissions()`](#requestpermissions)
+* [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -33,5 +43,123 @@ echo(options: { value: string; }) => Promise<{ value: string; }>
 **Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
 
 --------------------
+
+
+### setPlaylist(...)
+
+```typescript
+setPlaylist(options: { playlist: string[]; duration_seconds: number; }) => Promise<void>
+```
+
+| Param         | Type                                                           |
+| ------------- | -------------------------------------------------------------- |
+| **`options`** | <code>{ playlist: string[]; duration_seconds: number; }</code> |
+
+--------------------
+
+
+### getPlaylist()
+
+```typescript
+getPlaylist() => Promise<{ playlist: string[]; duration_seconds: number; }>
+```
+
+**Returns:** <code>Promise&lt;{ playlist: string[]; duration_seconds: number; }&gt;</code>
+
+--------------------
+
+
+### play()
+
+```typescript
+play() => Promise<void>
+```
+
+--------------------
+
+
+### pause()
+
+```typescript
+pause() => Promise<void>
+```
+
+--------------------
+
+
+### stop()
+
+```typescript
+stop() => Promise<void>
+```
+
+--------------------
+
+
+### addListener('playerStateUpdate', ...)
+
+```typescript
+addListener(eventName: 'playerStateUpdate', listenerFunc: (event: NativePlaylistPlayerStatus) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+```
+
+| Param              | Type                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>'playerStateUpdate'</code>                                                                      |
+| **`listenerFunc`** | <code>(event: <a href="#nativeplaylistplayerstatus">NativePlaylistPlayerStatus</a>) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt; & <a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
+
+--------------------
+
+
+### removeAllListeners()
+
+```typescript
+removeAllListeners() => Promise<void>
+```
+
+--------------------
+
+
+### checkPermissions()
+
+```typescript
+checkPermissions() => Promise<PermissionStatus>
+```
+
+**Returns:** <code>Promise&lt;any&gt;</code>
+
+--------------------
+
+
+### requestPermissions()
+
+```typescript
+requestPermissions() => Promise<PermissionStatus>
+```
+
+**Returns:** <code>Promise&lt;any&gt;</code>
+
+--------------------
+
+
+### Interfaces
+
+
+#### PluginListenerHandle
+
+| Prop         | Type                                      |
+| ------------ | ----------------------------------------- |
+| **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
+
+
+#### NativePlaylistPlayerStatus
+
+| Prop                    | Type                 |
+| ----------------------- | -------------------- |
+| **`isPlaying`**         | <code>boolean</code> |
+| **`currentTrackIndex`** | <code>number</code>  |
+| **`elapsedSeconds`**    | <code>number</code>  |
+| **`durationSeconds`**   | <code>number</code>  |
 
 </docgen-api>
