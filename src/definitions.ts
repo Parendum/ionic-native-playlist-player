@@ -13,13 +13,14 @@ export interface NativePlaylistPlayerPlugin {
 
     stop(): Promise<void>;
 
+    isPlaying(): Promise<IsPlayingResponse>;
+
+    // Plugin framework provided API
     addListener(
         eventName: 'playerStateUpdate',
         listenerFunc: (event: NativePlaylistPlayerStatus) => void,
     ): Promise<PluginListenerHandle> & PluginListenerHandle;
     removeAllListeners(): Promise<void>;
-
-
     checkPermissions(): Promise<PermissionStatus>;
     requestPermissions(): Promise<PermissionStatus>;
 }
@@ -29,4 +30,8 @@ export interface NativePlaylistPlayerStatus {
     currentTrackIndex: number,
     elapsedSeconds: number,
     durationSeconds: number,
+}
+
+export interface IsPlayingResponse {
+    isPlaying: boolean,
 }

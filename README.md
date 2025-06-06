@@ -19,6 +19,7 @@ npx cap sync
 * [`play()`](#play)
 * [`pause()`](#pause)
 * [`stop()`](#stop)
+* [`isPlaying()`](#isplaying)
 * [`addListener('playerStateUpdate', ...)`](#addlistenerplayerstateupdate-)
 * [`removeAllListeners()`](#removealllisteners)
 * [`checkPermissions()`](#checkpermissions)
@@ -96,6 +97,17 @@ stop() => Promise<void>
 --------------------
 
 
+### isPlaying()
+
+```typescript
+isPlaying() => Promise<IsPlayingResponse>
+```
+
+**Returns:** <code>Promise&lt;<a href="#isplayingresponse">IsPlayingResponse</a>&gt;</code>
+
+--------------------
+
+
 ### addListener('playerStateUpdate', ...)
 
 ```typescript
@@ -144,6 +156,13 @@ requestPermissions() => Promise<PermissionStatus>
 
 
 ### Interfaces
+
+
+#### IsPlayingResponse
+
+| Prop            | Type                 |
+| --------------- | -------------------- |
+| **`isPlaying`** | <code>boolean</code> |
 
 
 #### PluginListenerHandle

@@ -1,5 +1,7 @@
 package com.parendum.nativeplaylistplayer
 
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
@@ -40,6 +42,17 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
         return durationSeconds
     }
 
+    fun isServiceRunning(): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        @Suppress("DEPRECATION")
+        for (service in activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (NativeAudioService::class.java.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
     fun play() {
         val context = this.context
         val intent = Intent(context, NativeAudioService::class.java)
@@ -59,6 +72,11 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
     }
 
     fun pause() {
+        if (!isServiceRunning()) {
+            Log.w(TAG, "Service is not running, cannot pause")
+            return
+        }
+
         val intent = Intent(context, NativeAudioService::class.java)
         intent.action = "ACTION_PAUSE"
 
@@ -72,6 +90,11 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
     }
 
     fun stop() {
+        if (!isServiceRunning()) {
+            Log.w(TAG, "Service is not running, cannot stop")
+            return
+        }
+
         val intent = Intent(context, NativeAudioService::class.java)
         intent.action = "ACTION_STOP"
 

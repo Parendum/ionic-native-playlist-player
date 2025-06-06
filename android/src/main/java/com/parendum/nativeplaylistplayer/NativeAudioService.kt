@@ -175,6 +175,7 @@ class NativeAudioService : Service() {
 
     private fun stopPlayback() {
         Log.i(TAG, "stopPlayback() called")
+        sendPlaybackState()
         stopTimer() // Stop the timer when playback stops
         player.stop()
         stopForeground(true)

@@ -90,17 +90,6 @@ class NativePlaylistPlayerPlugin : Plugin() {
         }
     }
 
-
-    @PluginMethod
-    fun echo(call: PluginCall) {
-        Log.i(TAG, "echo()")
-        val value = call.getString("value") ?: ""
-
-        val ret = JSObject()
-        ret.put("value", implementation.echo(value))
-        call.resolve(ret)
-    }
-
     @PluginMethod
     fun setPlaylist(call: PluginCall) {
         Log.i(TAG, "setPlaylist()")
@@ -161,5 +150,18 @@ class NativePlaylistPlayerPlugin : Plugin() {
         this.implementation.stop()
 
         call.resolve()
+    }
+
+    @PluginMethod
+    fun isPlaying(call: PluginCall) {
+        Log.i(TAG, "isPlaying()")
+
+        val isRunning = implementation.isServiceRunning()
+
+        val ret = JSObject()
+        ret.put("isPlaying", isRunning)
+
+        Log.i(TAG, "isPlaying: $isRunning")
+        call.resolve(ret)
     }
 }
