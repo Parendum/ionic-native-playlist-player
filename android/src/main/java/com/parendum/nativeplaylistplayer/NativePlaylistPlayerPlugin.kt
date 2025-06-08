@@ -32,6 +32,10 @@ import com.getcapacitor.annotation.Permission
             alias = "MediaNotification",
             strings = [Manifest.permission.POST_NOTIFICATIONS]
         ),
+        Permission(
+            alias = "AudioSettings",
+            strings = [Manifest.permission.MODIFY_AUDIO_SETTINGS]
+        ),
     ]
 )
 class NativePlaylistPlayerPlugin : Plugin() {

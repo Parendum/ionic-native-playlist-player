@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -27,26 +28,31 @@ class NativeAudioService : Service() {
     private var statusRunnable: Runnable? = null
     private val statusHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
+    private var volumeCheckRunnable: Runnable? = null
+    private val volumeHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private lateinit var audioManager: AudioManager
+
     companion object {
         private const val TAG = "NativePlaylistPService"
         private const val CHANNEL_ID = "native_audio_notification_channel"
         private const val NOTIFICATION_ID = 1
+        private const val MAX_VOLUME_PERCENTAGE = 0.6f // 60%
 
         private val notifications = mapOf(
             "ca" to NotificationStrings(
-                title = "Incubeats està reproduint",
+                title = "Incubeats està reproduint. Nivell d'àudio limitat",
                 message = "Feu clic en aquesta notificació per obrir l'aplicació",
             ),
             "es" to NotificationStrings(
-                title = "Incubeats está reproduciendo",
+                title = "Incubeats está reproduciendo. Nivel de audio limitado",
                 message = "Haz clic en esta notificación para abrir la aplicación",
             ),
             "en" to NotificationStrings(
-                title = "Incubeats is playing",
+                title = "Incubeats is playing. Audio level limited",
                 message = "Click this notification to open the app",
             ),
             "fr" to NotificationStrings(
-                title = "Incubeats est en lecture",
+                title = "Incubeats est en lecture. Niveau audio limité",
                 message = "Cliquez sur cette notification pour ouvrir l'application",
             )
         )
@@ -65,6 +71,9 @@ class NativeAudioService : Service() {
         Log.i(TAG, "Service created")
         createNotificationChannel()
 
+        // Initialize AudioManager for volume control
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
         // Initialize ExoPlayer
         player = ExoPlayer.Builder(this).build()
         player.addListener(object : Player.Listener {
@@ -82,6 +91,7 @@ class NativeAudioService : Service() {
         })
 
         startStatusUpdates()
+        startVolumeMonitoring()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -154,6 +164,35 @@ class NativeAudioService : Service() {
         Log.i(TAG, "Status updates started")
     }
 
+    private fun startVolumeMonitoring() {
+        volumeCheckRunnable = object : Runnable {
+            override fun run() {
+                checkAndLimitVolume()
+                volumeHandler.postDelayed(this, 200)
+            }
+        }
+        volumeHandler.post(volumeCheckRunnable!!)
+        Log.i(TAG, "Volume monitoring started")
+    }
+
+    private fun checkAndLimitVolume() {
+        try {
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val maxAllowedVolume = (maxVolume * MAX_VOLUME_PERCENTAGE).toInt()
+
+            if (currentVolume > maxAllowedVolume) {
+                audioManager.setStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    maxAllowedVolume,
+                    0 // No flags (silent adjustment)
+                )
+                Log.i(TAG, "Volume limited from $currentVolume to $maxAllowedVolume (max: $maxVolume)")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking/limiting volume: ${e.message}")
+        }
+    }
 
     private fun stopTimer() {
         timerRunnable?.let { handler.removeCallbacks(it) }
@@ -167,6 +206,11 @@ class NativeAudioService : Service() {
         Log.i(TAG, "Status updates stopped")
     }
 
+    private fun stopVolumeMonitoring() {
+        volumeCheckRunnable?.let { volumeHandler.removeCallbacks(it) }
+        volumeCheckRunnable = null
+        Log.i(TAG, "Volume monitoring stopped")
+    }
 
     private fun startPlayback() {
         player.clearMediaItems()
@@ -270,11 +314,12 @@ class NativeAudioService : Service() {
         super.onDestroy()
         stopTimer()
         stopStatusUpdates()
+        stopVolumeMonitoring()
         Log.i(TAG, "Service destroyed")
         player.release()
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        return null // We won’t do bound service (yet)
+        return null // We won't do bound service (yet)
     }
 }
