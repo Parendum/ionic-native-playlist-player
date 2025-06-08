@@ -9,11 +9,13 @@ export interface NativePlaylistPlayerPlugin {
 
     play(): Promise<void>;
 
-    pause(): Promise<void>;
+    togglePause(): Promise<void>;
 
     stop(): Promise<void>;
 
     isPlaying(): Promise<IsPlayingResponse>;
+
+    toggleLoop(): Promise<void>;
 
     // Plugin framework provided API
     addListener(
@@ -30,6 +32,7 @@ export interface NativePlaylistPlayerStatus {
     currentTrackIndex: number,
     elapsedSeconds: number,
     durationSeconds: number,
+    isLooping: boolean,
 }
 
 export interface IsPlayingResponse {

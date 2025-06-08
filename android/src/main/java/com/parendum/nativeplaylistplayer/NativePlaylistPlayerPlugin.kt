@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
@@ -57,9 +56,12 @@ class NativePlaylistPlayerPlugin : Plugin() {
                     val currentTrackIndex = intent.getIntExtra("currentTrackIndex", 0)
                     val durationSeconds = intent.getIntExtra("durationSeconds", 0)
                     val elapsedSeconds = intent.getIntExtra("elapsedSeconds", 0)
+                    val isLooping = intent.getBooleanExtra("isLooping", false)
 
-                    Log.i(TAG,
-                        "Received player state: isPlaying=$isPlaying, currentTrackIndex=$currentTrackIndex, durationSeconds=$durationSeconds, elapsedSeconds=$elapsedSeconds")
+                    Log.i(
+                        TAG,
+                        "Received player state: isPlaying=$isPlaying, currentTrackIndex=$currentTrackIndex, durationSeconds=$durationSeconds, elapsedSeconds=$elapsedSeconds, isLooping=$isLooping"
+                    )
 
                     // Fire JS event:
                     val ret = JSObject()
@@ -67,6 +69,7 @@ class NativePlaylistPlayerPlugin : Plugin() {
                     ret.put("currentTrackIndex", currentTrackIndex)
                     ret.put("durationSeconds", durationSeconds)
                     ret.put("elapsedSeconds", elapsedSeconds)
+                    ret.put("isLooping", isLooping)
 
                     notifyListeners("playerStateUpdate", ret)
                 }
@@ -135,10 +138,19 @@ class NativePlaylistPlayerPlugin : Plugin() {
     }
 
     @PluginMethod
-    fun pause(call: PluginCall) {
-        Log.i(TAG, "pause()")
+    fun togglePause(call: PluginCall) {
+        Log.i(TAG, "togglePause()")
 
-        this.implementation.pause()
+        this.implementation.togglePause()
+
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun toggleLoop(call: PluginCall) {
+        Log.i(TAG, "toggleLoop()")
+
+        this.implementation.toggleLoop()
 
         call.resolve()
     }

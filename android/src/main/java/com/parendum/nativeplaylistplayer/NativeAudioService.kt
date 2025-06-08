@@ -19,6 +19,7 @@ class NativeAudioService : Service() {
     private var currentLanguage: String = "en" // Default to English
     private var elapsedSeconds: Int = 0
     private var durationSeconds: Int = 0
+    private var loop = false
 
     private var timerRunnable: Runnable? = null
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -93,7 +94,11 @@ class NativeAudioService : Service() {
                 return START_NOT_STICKY
             }
             "ACTION_PAUSE" -> {
-                pausePlayback()
+                togglePause()
+                return START_STICKY
+            }
+            "ACTION_LOOP" -> {
+                toggleLoop()
                 return START_STICKY
             }
             else -> {
@@ -125,7 +130,12 @@ class NativeAudioService : Service() {
                 }
 
                 if (elapsedSeconds >= durationSeconds) {
-                    stopPlayback()
+                    if (loop) {
+                        elapsedSeconds = 0
+                        player.seekTo(0)
+                    } else {
+                        stopPlayback()
+                    }
                 }
                 handler.postDelayed(this, 1000) // Run every second
             }
@@ -182,8 +192,8 @@ class NativeAudioService : Service() {
         stopSelf()
     }
 
-    private fun pausePlayback() {
-        Log.i(TAG, "pausePlayback() called")
+    private fun togglePause() {
+        Log.i(TAG, "togglePause() called")
 
         if (!player.isPlaying) {
             Log.i(TAG, "Setting player to play")
@@ -192,6 +202,15 @@ class NativeAudioService : Service() {
             Log.i(TAG, "Setting player to pause")
             player.pause()
         }
+
+        sendPlaybackState()
+    }
+
+    private fun toggleLoop() {
+        Log.i(TAG, "toggleLoop() called")
+
+        loop = !loop
+        Log.i(TAG, "Loop mode set to $loop")
 
         sendPlaybackState()
     }
@@ -238,8 +257,9 @@ class NativeAudioService : Service() {
         val intent = Intent("PLAYER_STATE_UPDATE")
         intent.putExtra("isPlaying", player.isPlaying)
         intent.putExtra("currentTrackIndex", player.currentMediaItemIndex)
-        intent.putExtra("durationSeconds", durationSeconds) // in seconds
-        intent.putExtra("elapsedSeconds", elapsedSeconds) // Add the elapsed seconds
+        intent.putExtra("durationSeconds", durationSeconds)
+        intent.putExtra("elapsedSeconds", elapsedSeconds)
+        intent.putExtra("isLooping", loop)
 
         sendBroadcast(intent)
         Log.i(TAG, "sendPlaybackState() broadcast sent")

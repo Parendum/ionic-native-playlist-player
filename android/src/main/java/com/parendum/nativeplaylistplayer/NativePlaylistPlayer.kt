@@ -71,7 +71,7 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
         }
     }
 
-    fun pause() {
+    fun togglePause() {
         if (!isServiceRunning()) {
             Log.w(TAG, "Service is not running, cannot pause")
             return
@@ -81,6 +81,24 @@ class NativePlaylistPlayer(private val context: android.content.Context) {
         intent.action = "ACTION_PAUSE"
 
         Log.i(TAG, "Sending ACTION_PAUSE to NativeAudioService")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    fun toggleLoop() {
+        if (!isServiceRunning()) {
+            Log.w(TAG, "Service is not running, cannot toggle loop")
+            return
+        }
+
+        val intent = Intent(context, NativeAudioService::class.java)
+        intent.action = "ACTION_LOOP"
+
+        Log.i(TAG, "Sending ACTION_LOOP to NativeAudioService")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)

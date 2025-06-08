@@ -17,9 +17,10 @@ npx cap sync
 * [`setPlaylist(...)`](#setplaylist)
 * [`getPlaylist()`](#getplaylist)
 * [`play()`](#play)
-* [`pause()`](#pause)
+* [`togglePause()`](#togglepause)
 * [`stop()`](#stop)
 * [`isPlaying()`](#isplaying)
+* [`toggleLoop()`](#toggleloop)
 * [`addListener('playerStateUpdate', ...)`](#addlistenerplayerstateupdate-)
 * [`removeAllListeners()`](#removealllisteners)
 * [`checkPermissions()`](#checkpermissions)
@@ -79,10 +80,10 @@ play() => Promise<void>
 --------------------
 
 
-### pause()
+### togglePause()
 
 ```typescript
-pause() => Promise<void>
+togglePause() => Promise<void>
 ```
 
 --------------------
@@ -104,6 +105,15 @@ isPlaying() => Promise<IsPlayingResponse>
 ```
 
 **Returns:** <code>Promise&lt;<a href="#isplayingresponse">IsPlayingResponse</a>&gt;</code>
+
+--------------------
+
+
+### toggleLoop()
+
+```typescript
+toggleLoop() => Promise<void>
+```
 
 --------------------
 
@@ -180,5 +190,6 @@ requestPermissions() => Promise<PermissionStatus>
 | **`currentTrackIndex`** | <code>number</code>  |
 | **`elapsedSeconds`**    | <code>number</code>  |
 | **`durationSeconds`**   | <code>number</code>  |
+| **`isLooping`**         | <code>boolean</code> |
 
 </docgen-api>
