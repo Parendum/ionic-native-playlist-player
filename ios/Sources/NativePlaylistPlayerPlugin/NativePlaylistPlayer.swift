@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import Capacitor
+import MediaPlayer
 
 @objc public class NativePlaylistPlayer: NSObject {
     private let tag = "NativePlaylistPlayer"
@@ -15,6 +16,11 @@ import Capacitor
     private var elapsedSeconds: Int = 0
     private var timer: Timer?
     private var statusTimer: Timer?
+    private var volumeTimer: Timer?
+
+    // Volume limiting
+    private let maxVolumePercentage: Float = 0.6 // 60%
+    private var volumeView: MPVolumeView?
 
     // Weak reference to plugin for callbacks
     weak var plugin: NativePlaylistPlayerPlugin?
@@ -22,6 +28,7 @@ import Capacitor
     override init() {
         super.init()
         setupAudioSession()
+        setupVolumeMonitoring()
     }
 
     private func setupAudioSession() {
@@ -33,6 +40,29 @@ import Capacitor
         } catch {
             CAPLog.print("[\(tag)] Failed to setup audio session: \(error.localizedDescription)")
         }
+    }
+
+    private func setupVolumeMonitoring() {
+        // Create a hidden MPVolumeView to access volume controls
+        volumeView = MPVolumeView(frame: CGRect.zero)
+        volumeView?.showsVolumeSlider = false
+        volumeView?.showsRouteButton = false
+        volumeView?.isHidden = true
+
+        // Add volume change notification observer
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(volumeDidChange),
+            name: NSNotification.Name(rawValue: "AVSystemController_SystemVolumeDidChangeNotification"),
+            object: nil
+        )
+
+        CAPLog.print("[\(tag)] Volume monitoring setup completed")
+    }
+
+    @objc private func volumeDidChange(notification: NSNotification) {
+        // This will be called whenever system volume changes
+        checkAndLimitVolume()
     }
 
     @objc public func setPlaylist(_ list: [String], _ durationSeconds: Int, _ languageCode: String) {
@@ -233,15 +263,14 @@ import Capacitor
 
             CAPLog.print("[\(self.tag)] Creating timers on main thread")
 
-            if timer != nil || statusTimer != nil {
-                CAPLog.print("[\(tag)] Warning: Timers already exist, skipping timer creation")
+            if timer != nil || statusTimer != nil || volumeTimer != nil {
+                CAPLog.print("[\(self.tag)] Warning: Timers already exist, skipping timer creation")
                 return
             }
 
             // Timer for elapsed seconds
             self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
                 guard let self = self else { return }
-                CAPLog.print("[\(self.tag)] Main timer fired!")
 
                 if self.isPlaying {
                     self.elapsedSeconds += 1
@@ -257,28 +286,59 @@ import Capacitor
                 }
             }
 
-        // Timer for status updates
-        self.statusTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            CAPLog.print("[\(self.tag)] Status timer fired!")
-            self.sendPlaybackState()
-        }
+            // Timer for status updates
+            self.statusTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                guard let self = self else { return }
+                self.sendPlaybackState()
+            }
 
-        CAPLog.print("[\(self.tag)] Timers created and scheduled on main thread")
+            // Timer for volume monitoring (every 200ms like Android)
+            self.volumeTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+                guard let self = self else { return }
+                self.checkAndLimitVolume()
+            }
+
+            CAPLog.print("[\(self.tag)] Timers created and scheduled on main thread")
+            CAPLog.print("[\(self.tag)] Volume monitoring started")
+        }
     }
-}
 
     private func stopTimers() {
-    DispatchQueue.main.async { [weak self] in
-        guard let self = self else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
 
-        self.timer?.invalidate()
-        self.timer = nil
-        self.statusTimer?.invalidate()
-        self.statusTimer = nil
-        CAPLog.print("[\(self.tag)] Timers stopped on main thread")
+            self.timer?.invalidate()
+            self.timer = nil
+            self.statusTimer?.invalidate()
+            self.statusTimer = nil
+            self.volumeTimer?.invalidate()
+            self.volumeTimer = nil
+            CAPLog.print("[\(self.tag)] Timers stopped on main thread")
+            CAPLog.print("[\(self.tag)] Volume monitoring stopped")
+        }
     }
-}
+
+    private func checkAndLimitVolume() {
+        // Only limit volume when actually playing audio
+        guard isPlaying || isPaused else { return }
+
+        let currentVolume = AVAudioSession.sharedInstance().outputVolume
+
+        if currentVolume > maxVolumePercentage {
+            // Find the volume slider in MPVolumeView
+            guard let volumeView = volumeView else { return }
+
+            for subview in volumeView.subviews {
+                if let slider = subview as? UISlider {
+                    DispatchQueue.main.async {
+                        slider.setValue(self.maxVolumePercentage, animated: false)
+                        CAPLog.print("[\(self.tag)] Volume limited from \(currentVolume) to \(self.maxVolumePercentage)")
+                    }
+                    break
+                }
+            }
+        }
+    }
 
     private func sendPlaybackState() {
         let data: [String: Any] = [
@@ -291,9 +351,12 @@ import Capacitor
 
         // Direct call to plugin instead of NotificationCenter
         plugin?.sendPlayerStateUpdate(data: data)
+    }
 
-        // Using debug level for frequent updates to avoid log spam
-        CAPLog.print("[\(tag)] sendPlaybackState() called")
+    deinit {
+        // Clean up volume monitoring
+        NotificationCenter.default.removeObserver(self)
+        stopTimers()
     }
 }
 
